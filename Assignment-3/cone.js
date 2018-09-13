@@ -10,14 +10,15 @@ function init() {
         alert("Unable to setup WebGL");
         return;
     }
-
+    cone = new Cone (gl,n)
     gl.clearColor( 1.0, 0.0, 1.0, 1.0 );
-
+   
     render();
 }
 
 function render() {
     gl.clear( gl.COLOR_BUFFER_BIT );
+    cone.render();
 }
 
 window.onload = init;
