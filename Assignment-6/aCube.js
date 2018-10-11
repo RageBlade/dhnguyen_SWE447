@@ -99,12 +99,12 @@ function Cube( vertexShaderId, fragmentShaderId ) {
 		   
     this.indices = { 
         values : new Uint16Array([
-            0, 1, 2, 0, 2, 3,	    //Face 1
-            4, 5, 6, 4, 6, 7,       //Face 2
-            8, 9, 10, 8, 10, 11,    //Face 3
-            13, 12, 14, 14, 12, 15, //Face 4
-            16, 17, 18, 16, 18, 19, //Face 5
-            20, 21, 22, 20, 22, 23  //Face 6
+            0, 1, 2, 0, 2, 3,	    
+            4, 5, 6, 4, 6, 7,       
+            8, 9, 10, 8, 10, 11,    
+            13, 12, 14, 14, 12, 15, 
+            16, 17, 18, 16, 18, 19, 
+            20, 21, 22, 20, 22, 23  
         ])
     };
     this.indices.count = this.indices.values.length;
@@ -117,7 +117,7 @@ function Cube( vertexShaderId, fragmentShaderId ) {
 			handleLoadedTexture (texImage, texture);
 		}		
 		
-		texImage.src = "monkey.png";		
+		texImage.src = "thanos.jpg";		
 	}
 	
     
@@ -188,7 +188,7 @@ function Cube( vertexShaderId, fragmentShaderId ) {
 handleLoadedTexture = function (image, texture) {
     gl.bindTexture(gl.TEXTURE_2D, texture);
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-    image = texture.image;
+    //image = texture.image;
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
     //if (isPowerOf2(image.width) && isPowerOf2(image.height)) 
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
