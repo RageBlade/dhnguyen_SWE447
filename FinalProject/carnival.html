@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+<title> Carnival Minigame </title>
+
+	<script src="three.min.js"></script>
+	<script src="physi.js"></script>
+	<script src="OBJLoader.js"></script>
+	<script src="MTLLoader.js"></script>
+	<script src="TrackballControls.js"></script>
+	<script src="stats.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<body>
+<center>
+<button id = "reset" onclick = "controls.reset()">Reset Camera</button>
+<button id = "reset" onclick = "history.go(0)" >Reset Scene</button>
+</center>
+	<div id="viewport"></div>
+<script>	
+var camera, scene, renderer;
+var geometry, material, ball;
+var raycaster, mouse, plane;
+var startPos, endPos;
+var $canvas;
+var balls;
+
+var render,render_stats,physics_stats,
+table,table_material,textloader,objLoader,
+mtlLoader,controls,ball_material,light,bottle,bottle_material;
+
+init();
+animate();
+
+document.ontouchmove = function(event) {
+  event.preventDefault();
+};
+
+function init() {
+render_stats = new Stats();
+		render_stats.domElement.style.position = 'absolute';
+		render_stats.domElement.style.top = '1px';
+		render_stats.domElement.style.zIndex = 100;
+		document.getElementById( 'viewport' ).appendChild( render_stats.domElement );
+		
+		physics_stats = new Stats();
+		physics_stats.domElement.style.position = 'absolute';
+		physics_stats.domElement.style.top = '50px';
+		physics_stats.domElement.style.zIndex = 100;
+		document.getElementById( 'viewport' ).appendChild( physics_stats.domElement );
+//Scene
+  scene = new Physijs.Scene({ fixedTimeStep: 1/120});
+		scene.setGravity(new THREE.Vector3( 0, -75, 0 ));
+//Camera
+  camera = new THREE.PerspectiveCamera(
+    60,
+    window.innerWidth / window.innerHeight,
+    1,
+    10000
+  );
+  camera.position.z = 300;
+  camera.position.y = 100;
+  camera.lookAt( scene.position );
+  scene.add(camera);
+  
+//TrackballControls
+	controls = new THREE.TrackballControls(camera);
+	controls.rotateSpeed = 1.0;
+	controls.zoomSpeed = 1.2;
+	controls.panSpeed = 0.8;
+	controls.noZoom = false;
+	controls.noPan = false;
+	controls.staticMoving = true;
+	controls.dynamicDampingFactor = 0.3;
+	
+//Loader
+textloader = new THREE.TextureLoader();
+
+//Textures
+table_material = Physijs.createMaterial(
+	new THREE.MeshBasicMaterial({ map: textloader.load('textures/Wooden.jpg')}),
+	.9,
+	.2
+	);
+table_material.map.wrapS = table_material.map.wrapT = THREE.RepeatWrapping;
+		table_material.map.repeat.set( 3, 3 );
+		
+ball_material = Physijs.createMaterial(
+	new THREE.MeshBasicMaterial({ map: textloader.load('textures/Fuzzy.jpg')}),
+	1,
+	.2
+	);
+bottle_material = Physijs.createMaterial(
+new THREE.MeshBasicMaterial({
+				map : textloader.load('textures/plastic.jpg')}),
+				.4,
+				.4
+				);
+var cone_material = Physijs.createMaterial(
+new THREE.MeshBasicMaterial({
+				map : textloader.load('textures/glass.jpg')}),
+				.4,
+				.4
+				);
+var box_material = Physijs.createMaterial(
+new THREE.MeshBasicMaterial({
+				map : textloader.load('textures/plywood.jpg')}),
+				.4,
+				.4
+				);
+textloader.load('textures/carnival_background.jpg',function(texture)
+{
+scene.background = texture;
+});
+//Custom Light Sources
+mtlLoader = new THREE.MTLLoader();
+	mtlLoader.load('models/LightSource.mtl', function(materials){
+	materials.preload();
+	
+ objLoader = new THREE.OBJLoader();
+	objLoader.setMaterials(materials);
+	objLoader.load('models/LightSource.obj', function(object){
+	object.position.z = 100;
+	scene.add(object);
+	});
+	});
+	
+var mtlLoader2 = new THREE.MTLLoader();
+	mtlLoader2.load('models/LightSource.mtl', function(materials2){
+	materials2.preload();
+	
+var objLoader2 = new THREE.OBJLoader();
+	objLoader2.setMaterials(materials2);
+	objLoader2.load('models/LightSource.obj', function(object2){
+	object2.position.z = 100;
+	object2.position.x = 200;
+	scene.add(object2);
+	});
+	});
+	
+var	mtlLoader3 = new THREE.MTLLoader();
+	mtlLoader3.load('models/LightSource.mtl', function(materials3){
+	materials3.preload();
+	
+var objLoader3 = new THREE.OBJLoader();
+	objLoader3.setMaterials(materials3);
+	objLoader3.load('models/LightSource.obj', function(object3){
+	object3.position.z = 100;
+	object3.position.x = -200;
+	scene.add(object3);
+	});
+	});
+	
+var light1 = new THREE.PointLight (0xFF0000,8,75);
+var light2 = new THREE.PointLight (0xFF0000,8,75);
+var light3 = new THREE.PointLight (0xFF0000,8,75);
+
+light1.position.z = 100;
+light2.position.z = 100;
+light3.position.z = 100;
+light2.position.x = 200;
+light3.position.x = -200;
+light1.position.y = 25;
+light2.position.y = 25;
+light3.position.y = 25;
+
+scene.add(light1);
+scene.add(light2);
+scene.add(light3);
+
+//Tables
+ table = new Physijs.BoxMesh(
+	new THREE.BoxGeometry(100,1,50),
+		table_material,
+		0,
+	);
+var table2 = new Physijs.BoxMesh(
+	new THREE.BoxGeometry(100,1,50),
+		table_material,
+		0,
+	);
+var table3 = new Physijs.BoxMesh(
+	new THREE.BoxGeometry(100,1,50),
+		table_material,
+		0,
+	);
+var table4 = new Physijs.BoxMesh(
+	new THREE.BoxGeometry(25,1,25),
+		table_material,
+		0,
+	);
+var table5 = new Physijs.BoxMesh(
+	new THREE.BoxGeometry(25,1,25),
+		table_material,
+		0,
+	);
+var table6 = new Physijs.BoxMesh(
+	new THREE.BoxGeometry(25,1,25),
+		table_material,
+		0,
+	);
+	
+	table2.position.x = 200;
+	table3.position.x = -200;
+	table5.position.x = 200;
+	table6.position.x = -200;
+	
+	table4.position.z = 100;
+	table5.position.z = 100;
+	table6.position.z = 100;
+	
+	table.receiveShadow = true;
+	table2.receiveShadow = true;
+	table3.receiveShadow = true;
+	table4.receiveShadow = true;
+	table5.receiveShadow = true;
+	table6.receiveShadow = true;
+	
+	scene.add(table);
+	scene.add(table2);
+	scene.add(table3);
+	scene.add(table4);
+	scene.add(table5);
+	scene.add(table6);
+	
+//Boxes
+var box1 = new Physijs.BoxMesh(
+	new THREE.BoxGeometry(20,10,20),
+	box_material
+	);
+var box2 = new Physijs.BoxMesh(
+	new THREE.BoxGeometry(20,10,20),
+	box_material
+	);
+var box3 = new Physijs.BoxMesh(
+	new THREE.BoxGeometry(20,10,20),
+	box_material
+	);
+var box4 = new Physijs.BoxMesh(
+	new THREE.BoxGeometry(20,10,20),
+	box_material
+	);
+var box5 = new Physijs.BoxMesh(
+	new THREE.BoxGeometry(20,10,20),
+	box_material
+	);
+var box6 = new Physijs.BoxMesh(
+	new THREE.BoxGeometry(20,10,20),
+	box_material
+	);
+var box7 = new Physijs.BoxMesh(
+	new THREE.BoxGeometry(50,10,20),
+	box_material
+	);
+	
+	box1.position.y = 10;
+	box2.position.y = 10;
+	box3.position.y = 10;
+	box4.position.y = 25;
+	box5.position.y = 25;
+	box6.position.y = 25;
+	box7.position.y = 45;
+	
+	box4.rotation.z = 80;
+	box5.rotation.z = 80;
+	box6.rotation.z = 80;
+	
+	box1.position.x = -200;
+	box2.position.x = -225;
+	box3.position.x = -175;
+	box4.position.x = -200;
+	box5.position.x = -225;
+	box6.position.x = -175;
+	box7.position.x = -200
+	
+	box1.castShadow = true;
+	box2.castShadow = true;
+	box3.castShadow = true;
+	box4.castShadow = true;
+	box5.castShadow = true;
+	box6.castShadow = true;
+	box7.castShadow = true;
+	
+	scene.add(box1);
+	scene.add(box2);
+	scene.add(box3);
+	scene.add(box4);
+	scene.add(box5);
+	scene.add(box6);
+	scene.add(box7);
+	
+//Cones
+var cone1 = new Physijs.ConeMesh(
+	new THREE.ConeGeometry(10,50,40),
+	cone_material
+	);
+var cone2 = new Physijs.ConeMesh(
+	new THREE.ConeGeometry(10,50,40),
+	cone_material
+	);
+var cone3 = new Physijs.ConeMesh(
+	new THREE.ConeGeometry(10,50,40),
+	cone_material
+	);
+	
+	cone1.position.y = 30;
+	cone2.position.y = 30;
+	cone3.position.y = 30;
+	
+	cone1.position.x = 200;
+	cone2.position.x = 175;
+	cone3.position.x = 225;
+
+	cone1.castShadow= true;
+	cone2.castShadow= true;
+	cone3.castShadow= true;
+
+	scene.add(cone1);
+	scene.add(cone2);
+	scene.add(cone3);
+	
+//Bottles
+bottle = new Physijs.CylinderMesh(
+	new THREE.CylinderGeometry(10,8,40),
+	bottle_material
+	);
+var bottle2 = new Physijs.CylinderMesh(
+	new THREE.CylinderGeometry(10,8,40),
+	bottle_material
+	);
+var bottle3 = new Physijs.CylinderMesh(
+	new THREE.CylinderGeometry(10,8,40),
+	bottle_material
+	);
+var bottle4 = new Physijs.CylinderMesh(
+	new THREE.CylinderGeometry(8,10,40),
+	bottle_material
+	);
+var bottle5 = new Physijs.CylinderMesh(
+	new THREE.CylinderGeometry(8,10,40),
+	bottle_material
+	);
+	
+	bottle.position.y = 30;
+	bottle2.position.y = 30;
+	bottle3.position.y = 30;
+	bottle4.position.y = 70;
+	bottle5.position.y = 70;
+	
+	bottle2.position.x = 24;
+	bottle3.position.x = -24;
+	bottle4.position.x = 12;
+	bottle5.position.x = -12;
+	
+	bottle.castShadow = true;
+	bottle2.castShadow = true;
+	bottle3.castShadow = true;
+	bottle4.castShadow = true;
+	bottle5.castShadow = true;
+	
+	scene.add(bottle);
+	scene.add(bottle2);
+	scene.add(bottle3);
+	scene.add(bottle4);
+	scene.add(bottle5);
+	
+//Ball
+  geometry = new THREE.SphereGeometry(10);
+  balls = [];
+
+  plane = new THREE.Plane(new THREE.Vector3(0, 0, -1), 0);
+
+  raycaster = new THREE.Raycaster();
+  startPos = new THREE.Vector2();
+  endPos = new THREE.Vector2();
+
+  renderer = new THREE.WebGLRenderer();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+
+  document.body.appendChild(renderer.domElement);
+  $canvas = $("canvas");
+
+  $canvas.on("mousedown touchstart", function(event) {
+    if ("ontouchstart" in window) {
+      console.log(event.originalEvent.touches);
+      var cx = event.originalEvent.touches[0].clientX;
+      var cy = event.originalEvent.touches[0].clientY;
+    } else {
+      var cx = event.clientX;
+      var cy = event.clientY;
+    }
+    startPos.x = cx / window.innerWidth * 2 - 1;
+    startPos.y = -(cy / window.innerHeight) * 2 + 1;
+  });
+
+  $canvas.on("mouseup touchend", function(event) {
+    if ("ontouchstart" in window) {
+      console.log(event.originalEvent.touches);
+      var cx = event.originalEvent.changedTouches[0].clientX;
+      var cy = event.originalEvent.changedTouches[0].clientY;
+    } else {
+      var cx = event.clientX;
+      var cy = event.clientY;
+    }
+    endPos.x = cx / window.innerWidth * 2 - 1;
+    endPos.y = -(cy / window.innerHeight) * 2 + 1;
+    raycaster.setFromCamera(endPos, camera);
+    var result = raycaster.ray.intersectPlane(plane);
+    ball = new Physijs.SphereMesh(geometry, ball_material);
+    ball.position.x = result.x;
+    ball.position.y = result.y;
+    ball.position.z = result.z;
+    ball.userData.dx = endPos.x - startPos.x;
+    ball.userData.dy = endPos.y - startPos.y;
+    balls.push(ball);
+    scene.add(ball);
+  });
+}
+
+function animate() {
+  requestAnimationFrame(animate);
+  for (var i = 0; i < balls.length; i++) {
+    var ball = balls[i];
+    ball.position.z -= 20;
+    ball.userData.dy -= 0.03;
+    ball.position.x += ball.userData.dx * 20;
+    ball.position.y += ball.userData.dy * 20;
+  }
+  render();
+  renderer.render(scene, camera);
+}
+
+
+function render() {
+  scene.simulate();
+  requestAnimationFrame(render);
+  controls.update();
+  
+}
+
+</script>
+</body>
+</html>
